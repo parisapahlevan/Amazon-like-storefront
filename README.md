@@ -3,4 +3,4 @@ In this activity, you'll be creating an Amazon-like storefront with the MySQL sk
 
 https://drive.google.com/open?id=1hTeSM-wfgIOHhYWYXxFgszWHJd1CfWPG
 
-PLEASE DOWNLOAD THE FILR FIRST
+PLEASE DOWNLOAD THE FILE FIRST
