@@ -6,49 +6,62 @@ var connection = mysql.createConnection({
   password: 'root',
   port: '8889',
   database: 'bamazon',
-});
+}); 
 
 connection.connect(function (err) {
-    if (err) {
-      console.log(err);
-    }
-    console.log('connected to mysql with ' + connection.threadId)
-    connection.end();
+    if (err) throw err;
+    idSearch();
 });
 
-connection.query("SELECT * FROM products", function (err, res){
-    
-});
-
-inquirer.prompt([{
-  message: "Please inter the ID of the product you would like to buy?",
-  name: "id"
-}, 
-{
-    message: "How many units of the product you would like to buy?",
-    name: "quantity"
-}
-]).then(function(answer){
-    getItem(answer.id);
-    console.log(answer.id)
-    connection.query("SELECT * FROM products where ?", {item_id: answer.id},
-        function (err, res){
+function idSearch(){
+    inquirer.prompt({
+        name: "id",
+        type: "input",
+        message: "Please enter the ID of the product you would like to buy?"
+    })
+    .then(function(answer){
+        currentID = answer.id;
+        var query = 'SELECT item_id, product_name FROM products WHERE ?';
+        connection.query(query, {item_id: answer.id}, function(err, res){
             if (err){
-                
+                console.log("ERROR: ",err)
+            } else {
+                for (var i = 0; i < res.length; i++){
+                    console.log(res[i]); 
+                }
+                unitSearch(answer.id);
             }
-    console.log(res);
+        });
     });
-});
-
-
-
-// function getItem(id){
-//     connection.query("SELECT * FROM products where ?", {item_id: id},
-//     function (err, res){
-//         if (err){
-            
-//         }
-// console.log(res);
-// });
-// }
+}
+function unitSearch(p_id){
+    inquirer.prompt({
+        name: "units",
+        type: "input",
+        message: "How many units of the product you would like to buy?"
+    })
+    .then(function(answer){
+        var query = 'SELECT stock_quantity, price FROM products WHERE ?';
+        connection.query(query, {item_id: p_id}, function(err, res){
+            if (err){
+                console.log("ERROR: ",err)
+            } else {
+                if (res[0].stock_quantity < answer.units){
+                    console.log("Insufficient quantity!")
+                    console.log(`The stock quantity is ${res[0].stock_quantity}`); 
+                    console.log("Continue shopping with us...\n ")
+                    idSearch();  
+                } else {
+                   var updatedQuantity =  res[0].stock_quantity - answer.units;
+                   var updatedQery = "UPDATE products SET ? WHERE ?";
+                   connection.query(updatedQery,[{stock_quantity:updatedQuantity}, {item_id: p_id}],function(err, response){
+                    console.log(`The total price is: ${res[0].price * answer.units}`); 
+                    console.log("Continue shopping with us")
+                    idSearch();  
+                   });  
+                } 
+            }
+        });
+    });
+}
 
